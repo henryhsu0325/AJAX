@@ -1,4 +1,4 @@
-<!--  有誤的檔案              -->
+<!--  有誤的檔案  範本             -->
 <div class="container">
 
   <h1 class="text-center">To Do List</h1>
@@ -47,23 +47,59 @@
     });
   });
  
-$("#Create-todo").on("click", function(event) {
-    event.preventDefault();
-    $.ajax ( {
-      url: "todos/",
-      method: "POST",
-      dataType: "json",
-      data: {
-        todo: {
-          title: $("#new-todo").val()
+  $("#Create-todo").on("click", function(event) {
+      event.preventDefault();
+      $.ajax ( {
+        url: "todos/",
+        method: "POST",
+        dataType: "json",
+        data: {
+          todo: {
+            title: $("#new-todo").val()
+          }
+        },
+        success: function(data) {
+          var todo = document.createElement("tr");
+          todo.id = data["id"];
+          $(todo).html($("#todo-template").html());
+          $(todo).find(".title.my-font").html(data["title"]);
+          $("#todolist").append(todo);
         }
-      },
+      });
+    });
+
+  $("#todolist").on("click", ".edit-todo", function(event) { 
+    var id = event.target.parentNode.parentNode.id;
+
+    $.ajax ( {
+      url: "todos/" + id + "/edit",
+      method: "GET",
+      dataType: "json",
+
       success: function(data) {
-        var todo = document.createElement("tr");
-        todo.id = data["id"];
-        $(todo).html($("#todo-template").html());
-        $(todo).find(".title.my-font").html(data["title"]);
-        $("#todolist").append(todo);
+        var textColumn = $("#" + data["id"]).find(".my-title");
+        textColumn.html($("#edit-template").html());
+        textColumn.find(".update-title").val(data["title"]);
+        textColumn.on("click", ".update-button", function(updateEvent) {
+          updateEvent.preventDefault();
+
+
+          $.ajax ( {
+            url: "todos/" + data["id"],
+            method: "PATCH",
+            dataType: "json",
+            data: { 
+              todo : {
+              title : textColumn.find(".update-title").val()
+            }
+          },
+          success: function(upddateData) {
+            var textColumn = $("#" + data["id"]).find(".my-title");
+            textColumn.html('<p class="tilte my-font"></p>');
+            textColumn.find('p').html(upddateData["title"]);
+          }
+          });
+        });
       }
     });
   });
@@ -73,11 +109,23 @@ $("#Create-todo").on("click", function(event) {
   <td class="my-pointer">
     <span class="my-font glyphicon glyphicon-unchecked"></span>    
   </td>
-  <td>
-    <p class="title my-font"></p>
-  </td>
+ </td>
+<td class="my-title">
+  <p class="title my-font"></p>
+</td>
   <td class="my-operation">
-  <span class="my-btn my-btn-transparent text-info glyphicon glyphicon-pencil"></span>
-  <span class="delete-todo my-btn my-btn-transparent text-danger glyphicon glyphicon-trash"></span>    
+    <span class="edit-todo my-btn my-btn-transparent text-info glyphicon glyphicon-pencil"></span>
+    <span class="delete-todo my-btn my-btn-transparent text-danger glyphicon glyphicon-trash"></span>    
   </td>
+</script>
+
+<script type="text/template" id="edit-template">
+  <form>
+  <div class="input-group">
+    <input type="text_area" class ="update-title form-control" %>
+    <div class="input-group-addon">
+      <button class="update-button my-btn my-btn-transparent">Update</button>
+    </div>
+  </div>
+  </form>
 </script>
